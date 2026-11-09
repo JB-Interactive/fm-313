@@ -24,7 +24,7 @@ The reason is a fault that is not understood yet. On the PC FM-313 was developed
 
 ## Origin and legal
 
-The sound engine is an independent clean-room development. It rests only on publicly described behaviour of the TB-303 circuit: a diode ladder low-pass with a high-pass in the resonance path, the filter and amplifier envelopes, the accent capacitor (the "wow"), the RC slide, and the square wave shaped from the sawtooth. No code, tables or data come from Roland firmware. "TB-303" and "TB-3" are trademarks of the Roland Corporation; this project has no connection to Roland and names them only to describe the kind of sound it aims at.
+The sound engine is an independent clean-room development. It rests only on publicly described behaviour of the TB-303 circuit: a diode ladder low-pass with a high-pass in the resonance path, the filter and amplifier envelopes, the accent capacitor (the "wow"), the RC slide, and the square wave shaped from the sawtooth. 
 
 The platform (boot stub, update loader, USB, keys, display) comes from [TransitFM1](https://github.com/Quixotic7/TransitFM1), which builds on Felucca, Dinghy, SLOOP and ChoralRoot. The key scan with the analog rows comes from felucca-bsp (MPL-2.0). Everything is under GPL-3.0-only; see `LICENSING.md` for the details.
 
