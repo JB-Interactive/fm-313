@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FM-313 for the M-VAVE FM-1</title>
+<meta name="description" content="FM-313: a 303-style acid bass line firmware for the M-VAVE FM-1. Diode ladder filter, accent, slide, 64 patterns. Install it from your browser.">
+<style>
+  /* One visual world: a dark scope screen. Neon green is the signal (primary), red marks accents,
+     exactly as a 303 pattern marks them. Layout: one column, wide bands. */
+  :root {
+    color-scheme: dark;
+    --ground: #0c0f0d;
+    --panel: #141916;
+    --line: #243029;
+    --ink: #e9f2ec;
+    --dim: #8fa198;
+    --note: #39ff6a;
+    --acc: #ff2d3f;
+    --slide: #c9d6cf;
+    --ok: #39ff6a;
+    --display: "Arial Black", "Helvetica Neue", system-ui, sans-serif;   /* no web fonts: nothing loads from a third party */
+    --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--ground); }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.6 var(--body); }
+  a { color: var(--note); }
+  :focus-visible { outline: 2px solid var(--note); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.015em; }
+  h2 { font-size: clamp(1.6rem, 3.2vw, 2.2rem); font-weight: 800; margin-bottom: 18px; }
+  h3 { font-size: 1.1rem; font-weight: 800; }
+  p { margin: 0; max-width: 64ch; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  header.top { border-bottom: 1px solid var(--line); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 14px; padding-bottom: 14px; }
+  .mark { font-family: var(--display); font-weight: 800; font-size: 1.35rem; letter-spacing: 0.02em; }
+  .mark span { color: var(--note); }
+  .top nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.95rem; }
+  .top nav a { color: var(--dim); text-decoration: none; }
+  .top nav a:hover { color: var(--ink); }
+
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; padding-top: 56px; padding-bottom: 48px; }
+  .hero h1 { font-size: clamp(2.4rem, 5.6vw, 4.1rem); font-weight: 800; line-height: 1.02; }
+  .hero h1 em { font-style: normal; color: var(--note); text-shadow: 0 0 24px rgba(57,255,106,0.35); }
+  .hero h1 b { color: var(--acc); font-weight: 800; }
+  .hero p.lede { margin-top: 18px; color: var(--dim); font-size: 1.12rem; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+  .btn { font: 600 1rem var(--body); border-radius: 6px; padding: 12px 20px; border: 1px solid var(--line);
+         background: var(--panel); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn.primary { background: var(--note); border-color: var(--note); color: #031407; }
+  .btn:hover { filter: brightness(1.12); }
+  .btn:disabled { opacity: 0.45; cursor: default; filter: none; }
+  .scope { background: #060807; box-shadow: 0 0 0 1px #0f2a17, 0 0 40px -18px var(--note); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .scope canvas { width: 100%; height: 190px; display: block; }
+  .scope .cap { display: flex; justify-content: space-between; font: 0.78rem var(--mono); color: var(--dim); margin-top: 8px; }
+  .steps { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; margin-top: 14px; align-items: end; height: 46px; }
+  .steps i { display: block; background: var(--note); border-radius: 2px; position: relative; }
+  .steps i.a { background: var(--acc); }
+  .steps i.r { background: var(--line); height: 3px !important; }
+  .steps i.s::after { content: ""; position: absolute; left: 55%; right: -4px; top: -9px; height: 3px; background: var(--slide); }
+
+  .facts { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .facts .wrap { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .facts div { padding: 18px 16px 18px 0; }
+  .facts b { display: block; font: 600 1.25rem var(--mono); }
+  .facts span { color: var(--dim); font-size: 0.9rem; }
+
+  section.band { padding: 64px 0; border-bottom: 1px solid var(--line); }
+  .clips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .clip { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 10px; }
+  .clip p { color: var(--dim); font-size: 0.95rem; }
+  .clip audio { width: 100%; }
+  .tag { font: 600 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--note); }
+  .tag.red { color: var(--acc); }
+
+  .engine { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 40px; }
+  .engine dl { margin: 0; }
+  .engine div { padding: 14px 0; border-top: 1px solid var(--line); }
+  .engine dt { font-weight: 600; }
+  .engine dd { margin: 4px 0 0; color: var(--dim); font-size: 0.97rem; }
+
+  .use { display: grid; grid-template-columns: 300px 1fr; gap: 36px; align-items: start; }
+  .use figure { margin: 0; }
+  .use img { width: 100%; image-rendering: pixelated; border-radius: 8px; border: 6px solid #050505; display: block; }
+  .use figcaption { color: var(--dim); font-size: 0.85rem; margin-top: 8px; }
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 600 0.78rem var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+  td:first-child { font-family: var(--mono); white-space: nowrap; }
+
+  .install { display: grid; grid-template-columns: 1fr 1.25fr; gap: 36px; align-items: start; }
+  .install ol { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; }
+  .install ol li::marker { font-family: var(--mono); color: var(--note); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+  .panel .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .meta { color: var(--dim); font-size: 0.85rem; margin-top: 12px; word-break: break-all; }
+  progress { width: 100%; height: 8px; margin-top: 16px; accent-color: var(--note); }
+  .status { margin-top: 14px; min-height: 1.6em; }
+  .status.ok { color: var(--ok); font-weight: 600; }
+  .status.bad { color: var(--acc); font-weight: 600; }
+  .ask { margin-top: 16px; border: 1px solid var(--acc); border-radius: 8px; padding: 14px; background: #24100f; }
+  .ask p { margin-bottom: 12px; }
+  details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+  summary { cursor: pointer; color: var(--dim); }
+  details .row { margin-top: 12px; }
+  input[type=file] { max-width: 100%; color: var(--dim); }
+  label.check { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: 0.93rem; color: var(--dim); }
+  pre { white-space: pre-wrap; font: 0.78rem var(--mono); color: var(--dim); max-height: 220px; overflow: auto; }
+  .note { margin-top: 16px; font-size: 0.9rem; color: var(--dim); border-left: 3px solid var(--acc); padding-left: 12px; }
+  body.busy .panel button { pointer-events: none; opacity: 0.6; }
+  body.busy .panel .ask button { pointer-events: auto; opacity: 1; }   /* the question must stay answerable */
+
+  footer { padding: 40px 0 64px; color: var(--dim); font-size: 0.9rem; }
+  footer .wrap { display: grid; gap: 10px; }
+
+  @media (max-width: 820px) {
+    .hero .wrap, .install, .use, .engine, .clips { grid-template-columns: 1fr; }
+    .facts .wrap { grid-template-columns: repeat(2, 1fr); }
+    .use figure { max-width: 300px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="mark">FM-<span>313</span> <span class="mono" style="color:var(--dim);font-size:0.8rem;font-weight:400">for M-VAVE FM-1 · v<span id="ver">0.1</span></span></div>
+    <nav aria-label="Sections"><a href="#listen">Listen</a><a href="#sound">Sound</a><a href="#controls">Controls</a><a href="#install">Install</a></nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1>A <em>303-style</em> bass line in your <b>FM-1</b>.</h1>
+      <p class="lede">FM-313 is a free firmware that turns the M-VAVE FM-1 into an acid bass line: one voice, a squelchy diode ladder filter, accent and slide, and a step sequencer with 64 patterns. No menus to dig through. Turn the knobs and play.</p>
+      <div class="cta">
+        <a class="btn primary" href="#install">Install now</a>
+        <a class="btn" href="#listen">Listen first</a>
+      </div>
+    </div>
+    <div class="scope" aria-label="Waveform and pattern from FM-313">
+      <canvas id="scope" width="900" height="380"></canvas>
+      <div class="steps" id="steps" aria-hidden="true"></div>
+      <div class="cap"><span>Engine output, 54 ms, resonance 0.9</span><span>Pattern 01</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="facts">
+  <div class="wrap">
+    <div><b>4-pole</b><span>diode ladder filter</span></div>
+    <div><b>88.2 kHz</b><span>internal rate</span></div>
+    <div><b>64 × 32</b><span>patterns × steps</span></div>
+    <div><b>GPL-3.0</b><span>free and open</span></div>
+  </div>
+</div>
+
+<section class="band" id="listen">
+  <div class="wrap">
+    <h2>Hear it</h2>
+    <div class="clips">
+      <div class="clip"><span class="tag">Saw · cutoff sweep</span><h3>The classic</h3><p>Sawtooth, high resonance, the cutoff opening and closing slowly.</p><audio controls preload="none" src="data:audio/mpeg;base64,@@CLIP_SAW@@"></audio></div>
+      <div class="clip"><span class="tag">Square · env mod sweep</span><h3>Hollow and rubbery</h3><p>The square wave with its tilted tops, env mod turned up over the run.</p><audio controls preload="none" src="data:audio/mpeg;base64,@@CLIP_SQ@@"></audio></div>
+      <div class="clip"><span class="tag red">Accent runs</span><h3>The wow</h3><p>Accents in a row build up on each other. The more resonance, the stronger the sweep.</p><audio controls preload="none" src="data:audio/mpeg;base64,@@CLIP_ACC@@"></audio></div>
+      <div class="clip"><span class="tag red">Distortion · shuffle · delay</span><h3>Dirty</h3><p>Distortion inside the oversampling, shuffle, dotted-eighth delay.</p><audio controls preload="none" src="data:audio/mpeg;base64,@@CLIP_DIST@@"></audio></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="sound">
+  <div class="wrap">
+    <h2>What's inside</h2>
+    <div class="engine">
+      <dl>
+        <div><dt>Diode ladder filter</dt><dd>Four coupled stages with nonlinear diode pairs, solved again for every sample. A coupling capacitor in the resonance path keeps the bass when the resonance goes up.</dd></div>
+        <div><dt>Accent with memory</dt><dd>The accent envelope runs through an RC network. Accents in a row stack up, the way the original circuit does it.</dd></div>
+        <div><dt>Slide</dt><dd>A fixed-time RC glide with no envelope retrigger. Overlapping keys slide when you play live, too.</dd></div>
+      </dl>
+      <dl>
+        <div><dt>Oscillator</dt><dd>A slightly bowed capacitor ramp, and a square shaped from it with tilted tops. Band-limited: aliasing stays below −73 dB.</dd></div>
+        <div><dt>Effects</dt><dd>Overdrive, distortion, fuzz and crunch, a tempo-synced ping-pong delay, reverb and an output limiter.</dd></div>
+        <div><dt>Built from scratch</dt><dd>Modelled on the publicly documented behaviour of the 303 circuit. No code or data from anyone else's firmware.</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="controls">
+  <div class="wrap">
+    <h2>Controls</h2>
+    <div class="use">
+      <figure><img alt="FM-313 screen: pattern 01, tempo 126, the step grid and the knob bars" src="data:image/png;base64,@@SCREEN@@"><figcaption>The screen in the simulator: pattern, tempo, steps (red = accent), knobs.</figcaption></figure>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Control</th><th>Tap / turn</th><th>With SEL</th></tr></thead>
+          <tbody>
+            <tr><td>KNOB 1–4</td><td>Cutoff, resonance, env mod, decay</td><td>–</td></tr>
+            <tr><td>ALGORITHM / SELECT</td><td>Accent / tempo</td><td>SELECT: shuffle</td></tr>
+            <tr><td>PRESETS</td><td>Sound preset</td><td>–</td></tr>
+            <tr><td>Keys</td><td>Play (overlapping keys slide); transpose while running</td><td>Accent</td></tr>
+            <tr><td>FX</td><td>Effects menu: knobs = drive, tone, delay, reverb</td><td>–</td></tr>
+            <tr><td>SEQ</td><td>Pattern menu: the keys pick patterns and banks, two keys chain them</td><td>Next pattern</td></tr>
+            <tr><td>EDIT</td><td>Edit menu: copy, paste, clear, random, modify, shift, lock, sound, undo</td><td>Undo</td></tr>
+            <tr><td>ARP</td><td>Scatter menu: black keys 1–8 start a kind, white keys 1–16 set the depth</td><td>Scatter on / off</td></tr>
+            <tr><td>ENV</td><td>The keys become an env mod / decay strip</td><td>Next wave</td></tr>
+            <tr><td>LFO</td><td>XY play: a long glide between keys</td><td>Tap tempo</td></tr>
+            <tr><td>PLAY / REC</td><td>Start-stop / step write</td><td>REC: realtime record</td></tr>
+            <tr><td>SAVE</td><td>Save everything (held 1 s: undo)</td><td>–</td></tr>
+          </tbody>
+        </table>
+        <p class="note">No manual needed: a help line under the scope shows what the panel does right now, every layer button opens its menu with a tap and closes it with another, and every SETUP row explains itself. The key menus draw the keyboard itself, each key labelled with what it does. Step write shows the pattern as a small piano roll: a key sets the note of the step under the cursor (SEL with it is an accent, a key still held makes a slide), the knobs edit that step, and a dice button is there if you want it. Over USB MIDI it takes notes, CCs, aftertouch and clock, records notes in realtime, and can send its notes and clock back out.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="install">
+  <div class="wrap">
+    <h2>Install</h2>
+    <div class="install">
+      <div>
+        <ol>
+          <li>Open Chrome or Edge on a computer. Safari and Firefox have no Web MIDI.</li>
+          <li>Charge the FM-1 and connect it directly with a USB data cable, no hub.</li>
+          <li>Press “Install FM-313” and allow MIDI access. Writing takes one to two minutes.</li>
+        </ol>
+        <p class="note">Updating an FM-1 that already runs FM-313: it restarts into its update mode by itself, and this page goes on from there. To leave update mode without installing, switch the FM-1 off and on.</p>
+        <p class="note">Inside a preview frame the browser often blocks MIDI. If it does, save this page as a file and open it directly in Chrome. The firmware is inside the page.</p>
+      </div>
+      <div class="panel">
+        <div class="row">
+          <button class="btn primary" id="go" disabled>Install FM-313</button>
+          <button class="btn" id="check">What is on my FM-1?</button>
+        </div>
+        <progress id="bar" max="1000" value="0" hidden></progress>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div class="ask" id="ask" hidden>
+          <p id="ask-text"></p>
+          <div class="row"><button class="btn primary" id="ask-yes">Yes, install</button><button class="btn" id="ask-no">Cancel</button></div>
+        </div>
+        <div id="override-box" hidden>
+          <label class="check"><input type="checkbox" id="override"> Install over it anyway. Installs over this firmware have left FM-1s dead before; keep an unbricker at hand.</label>
+        </div>
+        <label class="check"><input type="checkbox" id="anyport"> Try every MIDI port (when the FM-1 shows up under another name)</label>
+        <p class="meta mono">Package fm313-<span id="ver2">0.1</span>.fwsc · SHA-256 <span id="sha"></span></p>
+        <details>
+          <summary>Install another package, or go back to the stock firmware</summary>
+          <div class="row"><input type="file" id="file" accept=".fwsc"><button class="btn" id="file-go" disabled>Install file</button></div>
+          <div class="row"><button class="btn" id="dl">Download fm313.fwsc</button></div>
+        </details>
+        <details id="logbox">
+          <summary>Log</summary>
+          <pre id="log"></pre>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>FM-313 is an independent project with no connection to Roland or M-VAVE. TB-303 is a trademark of Roland Corporation. Install at your own risk; if something goes wrong, there are the <a href="https://github.com/Quixotic7/MvaveFM1Unbricker">MvaveFM1Unbricker</a> and the <a href="https://github.com/kurogedelic/FM-1-transporter">FM-1 Transporter</a>.</p>
+    <p>Free software under GPL-3.0. The platform comes from TransitFM1, Felucca, Dinghy, SLOOP and ChoralRoot; the installer logic from TransitFM1 and Felucca.</p>
+  </div>
+</footer>
+
+<script>
+  /* the hero: the engine's real output and the first demo pattern */
+  (function () {
+    const W = @@WAVE@@;
+    const c = document.getElementById("scope"), g = c.getContext("2d");
+    const css = getComputedStyle(document.documentElement);
+    g.fillStyle = "#060807"; g.fillRect(0, 0, c.width, c.height);
+    g.strokeStyle = "#13261a"; g.lineWidth = 1;
+    for (let y = 1; y < 4; y++) { g.beginPath(); g.moveTo(0, y * c.height / 4); g.lineTo(c.width, y * c.height / 4); g.stroke(); }
+    g.strokeStyle = css.getPropertyValue("--note").trim(); g.lineWidth = 3; g.lineJoin = "round"; g.shadowColor = "rgba(57,255,106,0.6)"; g.shadowBlur = 10;
+    g.beginPath();
+    W.forEach((v, i) => { const x = i / (W.length - 1) * c.width, y = c.height / 2 - v * c.height * 0.62; i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.stroke();
+    const P = "C, C C'A C, D#S F C,A C' C, A#,S C C'A G, C C,A D#'S".split(" ");
+    const NM = { C: 0, "C#": 1, D: 2, "D#": 3, E: 4, F: 5, "F#": 6, G: 7, "G#": 8, A: 9, "A#": 10, B: 11 };
+    const box = document.getElementById("steps");
+    for (const t of P) {
+      const i = document.createElement("i");
+      const n = NM[/^[A-G]#?/.exec(t)[0]], o = (t.match(/'/g) || []).length - (t.match(/,/g) || []).length;
+      i.style.height = (8 + (n + 12 * (o + 1)) * 34 / 36) + "px";
+      const f = t.replace(/^[A-G]#?/, "");
+      if (f.includes("A")) i.className = "a";
+      if (f.includes("S")) i.className += " s";
+      box.appendChild(i);
+    }
+  })();
+</script>
+<script>window.FM313_RELEASE = @@RELEASE@@;</script>
+<script type="module" src="fm313.js"></script>
+</body>
+</html>

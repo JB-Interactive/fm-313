@@ -1,0 +1,297 @@
+# FM-313 0.5 UI script (host/sim.c): the panel as README "Bedienung" describes it
+# boot: demo patterns, nothing saved yet
+shot boot
+expect cur 1
+expect bpm 126
+press PLAY
+wait 3000
+expect playing 1
+shot playing
+# the knobs are the sound; SELECT is the tempo; ALGORITHM the accent
+enc K1 10
+enc K2 5
+enc SELECT 4
+expect bpm 130
+enc ALGO -10
+expect acc 60
+shot knobs
+# SEQ held: a white key picks the pattern (queued while playing), it starts at the end of pattern 1
+btn SEQ 1
+tap 2
+btn SEQ 0
+expect layer 0
+shot queued
+wait 8000
+expect cur 2
+# SEQ tapped: its menu stays open (the keys pick, PLAY still plays), SEQ again closes it
+press SEQ
+expect menu 2
+tap 4
+press SEQ
+expect menu 0
+wait 8000
+expect cur 3
+# transpose with a key while playing (C4 = key 7 at the default octave)
+tap 10
+expect transpose 3
+wait 2000
+tap 7
+expect transpose 0
+# FX held: SELECT is the distortion type, the knobs the effects
+btn FX 1
+enc SELECT 2
+enc K1 10
+btn FX 0
+expect dtype 2
+expect drive 50
+# FX tapped: latched, the knobs stay effects
+press FX
+expect fxl 1
+enc K2 -10
+expect ftone 40
+press FX
+expect fxl 0
+press PLAY
+wait 500
+expect playing 0
+# EDIT held + white key 3 (A): clear pattern 3
+btn EDIT 1
+tap 4
+btn EDIT 0
+expect len 16
+expect s1type 1
+# step write: a soft key press, a hard one (accent)
+press REC
+expect mode 1
+tap 7 60
+expect s1type 0
+expect s1note 0
+expect s1flags 0
+expect cursor 2
+btn SEL 1
+tap 10
+btn SEL 0
+expect s2note 3
+expect s2flags 1
+press SEQ
+press FX
+expect s3type 1
+press LFO
+shot write
+# a key still held when the next is struck: the first slides into the second
+key 7 1 60
+key 9 1 60
+key 7 0
+key 9 0
+expect s5flags 2
+expect s6note 2
+# the knobs are the step: KNOB 1 back to step 6, KNOB 2 a semitone up, KNOB 3 accent, ALGORITHM an octave
+enc K1 -1
+expect cursor 6
+enc K2 1
+expect s6note 3
+enc K3 1
+expect s6flags 1
+enc ALGO 1
+expect s6note 15
+# the dice: a note of the pattern's own on this step
+press ARP
+expect s6type 0
+expect cursor 6
+press REC
+btn SEL 1
+press ENV
+btn SEL 0
+expect wave 1
+press PLAY
+wait 6000
+press PLAY
+# save, reboot, check
+press SAVE
+power
+expect cur 3
+expect wave 1
+expect s1note 0
+expect s2note 3
+shot after_power
+# EDIT + B (random), SAVE held = undo
+btn EDIT 1
+tap 6
+btn EDIT 0
+btn SAVE 1
+wait 1200
+btn SAVE 0
+expect s1note 0
+expect s2note 3
+# tap tempo (SEL + LFO)
+btn SEL 1
+press LFO
+wait 469
+press LFO
+wait 469
+press LFO
+btn SEL 0
+expect bpm 120
+# one menu at a time: FX open, ENV tapped replaces it; HOME closes
+press FX
+press ENV
+expect menu 5
+press HOME
+expect menu 0
+# from one menu straight to another, and from SETUP straight into a menu
+press SEQ
+press ARP
+expect menu 4
+press GLO
+expect mode 2
+press FX
+expect mode 0
+expect menu 1
+press HOME
+expect menu 0
+# PRESETS: the sound presets; SEQ + ENV: the sound goes with the pattern
+enc PRESETS 2
+expect preset 3
+btn SEQ 1
+press ENV
+btn SEQ 0
+expect tone 3
+# SEQ held: KNOB 1 = pattern tune, PLAY = triplets, SAVE = lock
+btn SEQ 1
+enc K1 5
+press PLAY
+press SAVE
+btn SEQ 0
+expect tune10 5
+expect pflags 3
+# locked: EDIT + random refused
+btn EDIT 1
+tap 6
+btn EDIT 0
+expect s1note 0
+btn SEQ 1
+press SAVE
+press PLAY
+btn SEQ 0
+expect pflags 0
+# a chain: SEQ held, white key 3 held, white key 5 pressed = C03..C05 (bank A here: A03-A05)
+btn SEQ 1
+key 4 1
+tap 7
+key 4 0
+btn SEQ 0
+expect chain 3
+btn SEQ 1
+enc K4 -2
+btn SEQ 0
+expect chain 1
+# SCATTER: ARP tapped opens the menu, nothing runs yet; a white key 1-8 starts its kind, the same key stops it
+press PLAY
+wait 600
+press ARP
+wait 50
+expect scatter 0
+expect menu 4
+tap 6
+expect depth 4
+expect scatter 0
+tap 5
+wait 50
+expect scatter 3
+tap 1
+wait 50
+expect scatter 1
+tap 1
+wait 50
+expect scatter 0
+tap 5
+press ARP
+wait 50
+expect menu 0
+expect scatter 3
+press HOME
+wait 50
+expect scatter 0
+# ARP held: the menu while held, a kind picked keeps running after
+btn ARP 1
+wait 50
+expect scatter 0
+tap 3
+btn ARP 0
+wait 50
+expect scatter 2
+expect menu 0
+# SEL + ARP: the last kind on / off
+btn SEL 1
+press ARP
+btn SEL 0
+wait 50
+expect scatter 0
+btn SEL 1
+press ARP
+btn SEL 0
+wait 50
+expect scatter 2
+press HOME
+wait 50
+expect scatter 0
+# the ENV strip: ENV held, a white key sets env mod while it is held
+btn ENV 1
+key 26 1
+wait 20
+expect venv 100
+key 26 0
+btn ENV 0
+expect venv 80
+# realtime record (SEL+REC): erase everything with EDIT held, then play two keys in
+btn SEL 1
+press REC
+btn SEL 0
+expect rtrec 1
+btn EDIT 1
+wait 4200
+btn EDIT 0
+expect notes 0
+tap 7
+wait 400
+tap 10 120
+wait 2000
+btn SEL 1
+press REC
+btn SEL 0
+expect rtrec 0
+expect notes 2
+press PLAY
+expect non 1
+# external record: MIDI notes into the pattern
+btn SEL 1
+press REC
+btn SEL 0
+press PLAY
+wait 300
+midi 0x90 67 110
+midi 0x80 67 0
+wait 2000
+press PLAY
+btn SEL 1
+press REC
+btn SEL 0
+expect notes 3
+# SETUP: SELECT moves, ALGORITHM changes (MIDI CH)
+press GLO
+expect mode 2
+enc ALGO 3
+expect midich 3
+enc SELECT 9
+enc ALGO 2
+expect tipsoff 0
+enc ALGO -2
+expect tipsoff 1
+enc ALGO 2
+press GLO
+expect mode 0
+# saved with the pattern's tune and sound and SETUP's choices
+press SAVE
+power
+expect tone 3
+expect midich 3

@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Build FM-313: host tests (engine + app simulator), then the firmware with the JieLi toolchain.
+#   push / pull request   -> tests + build, the package is a workflow artifact
+#   (releases: .github/workflows/release.yml, the Firmware Hub's signed build on a tag vX.Y.Z)
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Host tests (engine, sequencer, app, storage)
+        run: sh tests/fm313/run.sh
+
+      - name: Cache the JieLi toolchain
+        id: tc
+        uses: actions/cache@v4
+        with:
+          path: ~/.jieli
+          key: jieli-toolchain-${{ runner.os }}-${{ hashFiles('tools/get_toolchain.sh') }}
+
+      - name: Fetch the JieLi toolchain (pkgman.jieliapp.com)
+        if: steps.tc.outputs.cache-hit != 'true'
+        run: sh tools/get_toolchain.sh "$HOME/.jieli"
+
+      - name: Build
+        env:
+          JIELI_TOOLCHAIN: /home/runner/.jieli/toolchain
+          AC79_SDK: ${{ github.workspace }}/tools/sdk
+        run: |
+          set -euo pipefail
+          ulimit -n 8192 || true
+          ./build.sh
+          ls -l build/*.fwsc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fm-313
+          path: build/*.fwsc
+          if-no-files-found: error

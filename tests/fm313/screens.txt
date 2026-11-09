@@ -1,0 +1,119 @@
+# every screen once (tools/screen.py turns the dumps into pictures)
+wait 300
+shot boot
+wait 1200
+shot home_stop
+press PLAY
+wait 1420
+shot home_play
+enc K1 6
+wait 300
+shot knob
+wait 1200
+shot knob_after
+enc PRESETS 5
+wait 300
+shot sound
+wait 1700
+btn FX 1
+enc K1 3
+wait 100
+shot fx
+btn FX 0
+btn SEQ 1
+wait 100
+shot seq
+tap 4
+wait 100
+shot seq_queued
+btn SEQ 0
+btn EDIT 1
+wait 100
+shot edit
+btn EDIT 0
+press ARP
+wait 100
+shot scatter_menu
+tap 5
+wait 300
+shot scatter
+press ARP
+btn ENV 1
+key 20 1
+wait 100
+shot envstrip
+key 20 0
+btn ENV 0
+btn LFO 1
+key 9 1
+pressure 9 90
+wait 100
+shot xy
+pressure 9 0
+key 9 0
+btn LFO 0
+press PLAY
+wait 2000
+press REC
+enc SELECT 4
+wait 100
+shot write
+press ARP
+press SEQ
+shot write_flags
+press REC
+press GLO
+wait 100
+shot setup
+enc SELECT 8
+wait 100
+shot setup2
+enc SELECT -8
+press GLO
+wait 1700
+shot home_after
+# 0.5.1: what a tap teaches, the transpose, PHONES
+press ENV
+wait 150
+shot tap_env
+wait 3500
+press EDIT
+wait 150
+shot tap_edit
+wait 3500
+press PLAY
+wait 1500
+tap 9
+wait 150
+shot transpose
+wait 3500
+shot home_xpose
+press PLAY
+press GLO
+enc SELECT 10
+enc ALGO 2
+wait 100
+shot setup_leds
+enc ALGO -2
+enc SELECT 1
+wait 100
+shot setup_phones
+enc SELECT 1
+wait 100
+shot setup_update
+press GLO
+# 0.6: step write on a full pattern (A01), the cursor on step 6
+press HOME
+btn SEQ 1
+tap 0
+btn SEQ 0
+wait 100
+press REC
+enc K1 5
+wait 100
+shot write_roll
+enc K2 3
+enc K3 1
+wait 100
+shot write_knobs
+press REC

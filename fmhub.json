@@ -1,0 +1,6 @@
+{
+  "what": "A 303-style acid bass line synth: one monophonic voice with a nonlinear diode ladder filter, accent and slide, a 64-pattern step sequencer with a piano-roll step editor, scatter effects, drive, delay and reverb. Every menu explains itself on screen.",
+  "kinds": ["synth"],
+  "image": "docs/card.png",
+  "color": "#18FF50"
+}

@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# A release for the FM-1 Firmware Hub (thefirmwarehub.com/kb/#sign): a tag vX.Y.Z builds FM-313 on GitHub's runner
+# with the hub's shared workflow, which signs the package (an attestation) and attaches it to the release.
+# The asset keeps one name (fm313.fwsc) and FM-313 one identity (FM-1_313), so the hub's Install takes the newest.
+#   git tag v0.7.0 && git push origin v0.7.0
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      build: ./build.sh --release "${GITHUB_REF_NAME#v}" && cp "build/fm313-${GITHUB_REF_NAME#v}.fwsc" build/fm313.fwsc
+      packages: build/fm313.fwsc
+      test: sh tests/fm313/run.sh
