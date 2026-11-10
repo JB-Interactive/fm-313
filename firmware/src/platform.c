@@ -96,6 +96,9 @@ static void ota_idle(void)
 {
     fm1_wdt_feed();
     if (recovery_active) recovery_poll();
+#ifdef APP_OTA_IDLE
+    APP_OTA_IDLE();                             /* FM-313: the session's requests watched (fm313.c) */
+#endif
 }
 static int ota_in_area(uint32_t off, uint32_t n) { return FL_IN(off, n, OTA_AREA, OTA_AREA + OTA_AREA_LEN); }
 static int ota_erase(uint32_t off)

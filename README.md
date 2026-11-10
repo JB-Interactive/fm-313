@@ -2,7 +2,7 @@
 
 A minimal, 303-style bass line firmware for the M-VAVE FM-1: one monophonic acid voice, a step sequencer with 64 patterns, and the effects acid needs. Sound quality comes before feature count.
 
-**Status: 0.7.2, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
+**Status: 0.7.3, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
 
 FM-313 is an independent project. It is not made, endorsed or supported by Roland or M-VAVE. Installing it is at your own risk.
 
@@ -16,9 +16,9 @@ If this is your first custom firmware, keep [FM-1 Transporter](https://github.co
 
 FM-313 answers installers with its own identity, `FM-1_313`. Its update loader answers as `ota-FM-1_900`, the update mode that the Firmware Hub and the installers of the Felucca family carry on with. The flash chip of newer FM-1s (UC25HQ80, JEDEC `0xB36014`) is accepted like the earlier one (`0x856014`): in the firmware, in its USB rescue and in the update loader.
 
-**Updating while FM-313 runs.** FM-313 serves no update session itself. On an installer's install command, or SETUP > UPDATE (SAVE twice), the FM-1 restarts into its update loader, which writes the firmware. Nothing is written for that restart: switching the FM-1 off and on plays again. The installers of this family go on with such a loader by themselves.
+**Updating while FM-313 runs.** As the firmwares of this family do it: FM-313 answers the installer, checks the package's header, makes sure its update loader is staged, and restarts into the loader, which writes the firmware. The sound stops for it. SETUP > UPDATE (SAVE twice) restarts into the loader directly; nothing is written for that, and switching the FM-1 off and on plays again. In update mode the screen stays dark.
 
-**Known issue.** On some computers (seen with Windows 11) an installer may report that it found no FM-1 at the first try. FM-313 then restarts into its update loader by itself: press Install again. On such a computer MIDI OUT over USB may not be reliable either.
+**Known issue.** On some computers (seen with Windows 11) the computer at times stops collecting what FM-313 sends over USB. FM-313 notices that within 200 ms and restarts into its update loader by itself. An installer may then report that it found no FM-1, or that the FM-1 stopped: press Install again, and it goes on with the loader. On such a computer MIDI OUT over USB may not be reliable either.
 
 **If the FM-1 does not start:** hold OCT− while switching on. That opens the USB rescue; then install again.
 

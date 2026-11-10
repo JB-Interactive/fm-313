@@ -4,7 +4,7 @@
 #include "fm313_app.h"
 #include "fm313_gfx.h"
 #ifndef FM313_VERSION
-#define FM313_VERSION "0.7.2"
+#define FM313_VERSION "0.7.3"
 #endif
 
 /* ---------------------------------------------------------------- state */

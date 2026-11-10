@@ -15,6 +15,8 @@
 /* the installer's handshake (cmd 0x11, an installer's alone: no DAW sends it) goes to the main loop here, which
  * answers it and watches the answer leave (hs_poll below) */
 #define APP_HANDSHAKE_SWITCH 1
+static void app_ota_idle(void);
+#define APP_OTA_IDLE app_ota_idle
 #define LCD_BAUD 2u          /* SPI1 20 MHz (TransitFM1: 12). A full scope frame took 41 ms on the wire; the ST7789V takes 60+ */
 #include "platform.c"
 #include "fm1_audio.h"
@@ -52,18 +54,19 @@ void hw_midi_out(uint8_t st, uint8_t d1, uint8_t d2)      /* audio ISR: the USB 
     midi_out_event(cin | (uint32_t)st << 8 | (uint32_t)d1 << 16 | (uint32_t)d2 << 24);
 }
 static void audio_silence(void);
-/* ---- updates while FM-313 runs (0.7)
- * An installer's UPGRADE command, or SETUP > UPDATE, restarts the FM-1 into its staged update loader, with the update
- * record in RAM only (ota.c ota_to_loader: nothing is written; a power cycle plays again). The loader answers the
- * installer and writes the package: the installers of this family go on with such a loader by themselves ("the
- * firmware restarted into its loader at once"). FM-313 serves no update session itself.
+/* ---- updates while FM-313 runs
+ * As the firmwares of this family do it (Felucca, TransitFM1): the handshake is answered, and an installer's UPGRADE
+ * command is served here as step 1 of the update (ota.c ota_session: the package checked, our loader staged, the
+ * host's confirmation), then the FM-1 restarts into the loader, which writes. The sound stops for it.
  *
- * Why: on the Windows 11 PC FM-313 was developed with, the host stopped collecting what FM-313 sent once it had run
- * for a while (the first answers after a boot left, then a packet stayed loaded for good: TxPktRdy never cleared,
- * the queue behind it filled), and neither the update mode entered from the app nor a slower screen changed that:
- * only a restart did. The cause is not found. So the handshake's answer is watched: when the host has not taken it
- * after 200 ms, FM-313 restarts into the loader as well, and the installer finds that. Not in the first minute after
- * a warm boot: an installer's last look after an install must never send the new firmware away again.
+ * One fault is worked around. On the Windows 11 PC FM-313 was developed with, the host at times stopped collecting
+ * what FM-313 sent (a packet stayed loaded for good: TxPktRdy never cleared, the queue behind it filled), and only
+ * a restart helped. The platform's USB code is TransitFM1's, byte for byte; the cause is not found. So what FM-313
+ * sends an installer is watched: an answer or a request the host has not taken after 200 ms, and FM-313 restarts
+ * into its staged loader, with the update record in RAM only (ota.c ota_to_loader: nothing is written; a power
+ * cycle plays again). The loader answers, and an installer goes on with it (at once, or at its next try). Not for a
+ * mere handshake in the first minute after a warm boot: an installer's last look after an install must never send
+ * the new firmware away again. SETUP > UPDATE restarts into the loader too.
  *
  * update_loop is the fallback when our loader is not staged (or the flash is unknown): the USB rescue's loop on the
  * running USB stack, the timer and the audio stopped at their sources (a flash read re-enables interrupts) */
@@ -112,6 +115,38 @@ static void warm_begin(void)
     fm313_warm_mark = WARM_MAGIC;
 }
 static int hs_quiet(void) { return boot_warm && fm1_ms < 60000u; }
+/* step 1, as TransitFM1's main loop serves it (platform.c platform_poll), with the sound off first: the flash
+ * driver runs with interrupts off, and the DMA would loop a stale half. TIMER5 keeps polling USB. A session that
+ * ends without a commit (refused, failed, the host gone) has said so on the screen: FM-313 then restarts */
+static uint8_t in_session;
+static void serve_update(void)
+{
+    master_target = 0.f;                         /* the output glides to silence (the audio ISR, a few ms) */
+    fm1_delay_ms(30);
+    fm1_irq_off();
+    fm1_audio_stop();
+    fm1_irq_mask(FM1_IRQ_ALNK0);
+    fm1_irq_on();
+    lcd_sync();
+    usb.ota_req = 0;
+    in_session = 1;
+    if (flash_ok)
+        ota_session();                           /* returns only if nothing was committed */
+    in_session = 0;
+    for (uint32_t t = fm1_ms; fm1_ms - t < 2500u;)
+        fm1_wdt_feed();                          /* (the screen says why) */
+    usb_detach();
+    fm1_delay_ms(30);
+    bootguard_clear(&bootguard);
+    fm1_reboot();
+}
+static void app_ota_idle(void)                   /* ota.c waits (a request sent, its answer due) */
+{
+    if (in_session && tx_wait > 400u) {          /* the host does not take our request: the loader instead */
+        in_session = 0;
+        to_loader();
+    }
+}
 static void hs_poll(void)                        /* the main loop */
 {
     static uint32_t sent_ms;                     /* an answer is on its way since (0: none) */
@@ -129,8 +164,11 @@ static void hs_poll(void)                        /* the main loop */
         if ((so_w != so_r || tx_wait > 400u) && !hs_quiet())
             to_loader();
     }
-    if (usb.ota_req)
-        to_loader();                             /* (the fallback's loop serves the request, still pending) */
+    if (usb.ota_req) {
+        if (stuck)
+            to_loader();                         /* (the loader takes the installer's next try) */
+        serve_update();
+    }
 }
 void hw_enter_update(void) { to_loader(); }
 int hw_cpu_pct(void) { return (int)(audio_load_q8 * 100u / 256u); }

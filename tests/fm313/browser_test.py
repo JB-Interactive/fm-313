@@ -29,11 +29,11 @@ with sync_playwright() as p:
     assert up == 2 and not errs
     # FM-313 0.7 over itself: it restarts into its loader (on UPGRADE; when its answer is not collected; at once),
     # the page goes on with the loader, and never asks the new firmware anything
-    for mode in ("jump", "stuck", "silent"):
+    for mode in ("step1", "jump", "stuck", "silent"):   # step1: the family's two steps, FM-313's own way (0.7.3)
         pg = b.new_page()
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
-        pg.add_init_script("window.__FAKE = { identity: 'FM-1_313', name: 'FM-1', fm313: '%s' };" % mode + fake)
+        pg.add_init_script("window.__FAKE = { identity: 'FM-1_313', name: 'FM-1', fm313: %s };" % ("null" if mode == "step1" else "'%s'" % mode) + fake)
         pg.goto(page_path.as_uri())
         pg.click("#go")
         pg.wait_for_selector("#ask:not([hidden])", timeout=30000)
@@ -41,6 +41,6 @@ with sync_playwright() as p:
         pg.wait_for_function("document.getElementById('status').textContent.startsWith('Done')", timeout=60000)
         up, post = pg.evaluate("[window.__dev.upgrades, window.__dev.postHs]")
         print("fm313 %-6s:" % mode, pg.inner_text("#status"), "| loader writes:", up, "| asked after:", post, "| errors:", errs)
-        assert up == 1 and post == 0 and not errs
+        assert up == (2 if mode == "step1" else 1) and post == 0 and not errs
     b.close()
 print("browser test passed")
