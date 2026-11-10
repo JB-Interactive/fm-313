@@ -2,7 +2,7 @@
 
 A minimal, 303-style bass line firmware for the M-VAVE FM-1: one monophonic acid voice, a step sequencer with 64 patterns, and the effects acid needs. Sound quality comes before feature count.
 
-**Status: 0.7.0, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
+**Status: 0.7.1, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
 
 FM-313 is an independent project. It is not made, endorsed or supported by Roland or M-VAVE. Installing it is at your own risk.
 
@@ -56,7 +56,7 @@ Three rules. The FM-1's labels mean what they say. A held button is a layer whos
 | KNOB 1–4 | Cutoff, resonance, env mod, decay | KNOB 4: reverb size in the FX menu |
 | ALGORITHM | Accent | – |
 | SELECT | Tempo | Shuffle |
-| PRESETS | Sound preset (14 own sounds, matched in loudness: all −13 LUFS, CLASSIC −12.5) | – |
+| PRESETS | Sound preset (22 own sounds, matched in loudness by `tools/preset_loudness.py`; CLASSIC is 0.5 dB above the rest) | – |
 | Keys | Stopped: play (overlapping: slide). Running: transpose (C4 = 0). Realtime recording: record | Accent |
 | FX | Menu: KNOB 1–4 = drive, tone, delay, reverb; SELECT = distortion type; ALGORITHM = delay time; PRESETS = feedback; SEL+KNOB 4 = reverb size | – |
 | SEQ | Menu: white keys = patterns 1–16 of the bank, black keys 1–4 = banks A–D, hold one white key and press a second = chain; KNOB 1 pattern tune, KNOB 2 pitch shift, KNOB 3 length, KNOB 4 chain; ALGORITHM shuffle; only while held: PLAY triplets, SAVE lock, ENV pattern sound, OCT± bank | Next pattern |
@@ -81,7 +81,7 @@ Three rules. The FM-1's labels mean what they say. A held button is a layer whos
 
 **Headphones silent on the left.** A report: the dry sound only on the right, with delay or reverb on both sides. The firmware sends the converter the same value left and right for the dry sound. A left side that falls silent exactly when both channels are equal fits a connection where the headphones' common return sits on the right output (the left ear hears L − R, the right −R): a plug not fully in, a four-pole headset plug, an adapter. SETUP > PHONES LEFT FIX compensates exactly that (it sends L − R and −R), and only while the jack reports a plug; the speaker keeps the normal signal. The footer shows JACK: IN or OUT.
 
-**Feature set.** Modelled on the publicly listed features of Roland's TB-3, in an implementation of its own: step and realtime recording, recording external MIDI, a triplet grid, pattern length while playing, shuffle, tap tempo, random patterns and random mutation, copy/paste, chains of neighbouring patterns, transposing by key, pattern tune (±700 cents) and master tune (430–450 Hz), pitch shift, pattern sound, pattern lock, sound presets, SCATTER with eight kinds in 16 depths (by MIDI CC too), local off, MIDI clock in and out, notes out. The keys take the touch pad's jobs: the ENV strip, the XY play and the pattern choice. The 14 presets are sounds of this project, not the TB-3's.
+**Feature set.** Modelled on the publicly listed features of Roland's TB-3, in an implementation of its own: step and realtime recording, recording external MIDI, a triplet grid, pattern length while playing, shuffle, tap tempo, random patterns and random mutation, copy/paste, chains of neighbouring patterns, transposing by key, pattern tune (±700 cents) and master tune (430–450 Hz), pitch shift, pattern sound, pattern lock, sound presets, SCATTER with eight kinds in 16 depths (by MIDI CC too), local off, MIDI clock in and out, notes out. The keys take the touch pad's jobs: the ENV strip, the XY play and the pattern choice. The 22 presets are sounds of this project, not the TB-3's.
 
 **MIDI (USB).** Notes play the voice or transpose the running pattern (C4 = 0); a velocity from ACCENT AT up gives an accent; in realtime recording they are recorded. Aftertouch moves what SETUP > AFTERTOUCH says, CC 1 gives vibrato, CC 102/103/104 switch SCATTER (on/off, kind, depth). CC 74 cutoff, 71 resonance, 75 env mod, 72 decay, 73 accent, 12 drive, 91 reverb, 94 delay. With MIDI clock chosen in SETUP, clock, start, continue and stop drive the sequencer. With SETUP > MIDI OUT, FM-313 sends the notes it plays (accent = velocity 127; a slide sends the new note before the old one's note off) and, as the master, clock, start and stop. See the known issue under "Install".
 

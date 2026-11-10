@@ -4,7 +4,7 @@
 #include "fm313_app.h"
 #include "fm313_gfx.h"
 #ifndef FM313_VERSION
-#define FM313_VERSION "0.7.0"
+#define FM313_VERSION "0.7.1"
 #endif
 
 /* ---------------------------------------------------------------- state */
@@ -237,6 +237,15 @@ static const preset_t PRESETS[] = {
     { "SPACE",     0.35f, 0.82f, 0.60f, 0.60f, 0.70f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.25f, 0.55f, 4, 0.40f, 0.80f, 0.73f },
     { "4-OSC LEAD",0.55f, 0.55f, 0.45f, 0.55f, 0.60f, FM313_SUPER,  FM313_DIST_OD,   0.35f, 0.60f, 0.25f, 0.40f, 3, 0.20f, 0.60f, 0.74f },
     { "SUPER BASS",0.25f, 0.45f, 0.40f, 0.50f, 0.55f, FM313_SUPER,  FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.05f, 0.40f, 2.12f },
+    /* 0.7.1: eight more (gains by tools/preset_loudness.py, matched to the fourteen above) */
+    { "PLUCK",     0.28f, 0.50f, 0.70f, 0.12f, 0.60f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.31f },
+    { "LIQUID",    0.26f, 0.90f, 0.70f, 0.65f, 0.90f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.20f, 0.40f, 3, 0.15f, 0.50f, 0.65f },
+    { "HOLLOW",    0.50f, 0.30f, 0.20f, 0.60f, 0.50f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.12f, 0.45f, 1.24f },
+    { "SUB",       0.10f, 0.20f, 0.15f, 0.80f, 0.40f, FM313_SQUARE, FM313_DIST_OFF,  0.30f, 0.30f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.39f },
+    { "WOW",       0.18f, 0.88f, 0.90f, 0.75f, 0.95f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.64f },
+    { "ACID FUZZ", 0.30f, 0.85f, 0.70f, 0.50f, 0.80f, FM313_SAW,    FM313_DIST_FUZZ, 0.60f, 0.55f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.73f },
+    { "WAREHOUSE", 0.32f, 0.78f, 0.60f, 0.50f, 0.75f, FM313_SAW,    FM313_DIST_DIST, 0.60f, 0.50f, 0.00f, 0.45f, 3, 0.35f, 0.70f, 0.73f },
+    { "4-OSC ACID",0.30f, 0.80f, 0.65f, 0.50f, 0.75f, FM313_SUPER,  FM313_DIST_OD,   0.45f, 0.55f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.55f },
 };
 #define NPRESETS ((int)(sizeof PRESETS/sizeof PRESETS[0]))
 static void load_preset(int i)                      /* i: 0-based */
