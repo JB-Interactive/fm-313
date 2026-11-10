@@ -295,3 +295,15 @@ press SAVE
 power
 expect tone 3
 expect midich 3
+# 0.7.2: SETUP's choices survive a restart without SAVE (PHONES LEFT FIX), the pattern edits do not
+expect phones 0
+press GLO
+enc SELECT 20
+enc SELECT -1
+enc ALGO 1
+expect phones 1
+press GLO
+wait 100
+power
+expect phones 1
+expect tone 3

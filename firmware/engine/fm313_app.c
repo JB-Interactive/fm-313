@@ -4,7 +4,7 @@
 #include "fm313_app.h"
 #include "fm313_gfx.h"
 #ifndef FM313_VERSION
-#define FM313_VERSION "0.7.1"
+#define FM313_VERSION "0.7.2"
 #endif
 
 /* ---------------------------------------------------------------- state */
@@ -406,6 +406,30 @@ int fm313_app_store_save(void)
     return 0;
 }
 
+/* SETUP's choices alone (0.7.2: on leaving SETUP, so PHONES, LEDS and the rest survive a restart without a SAVE):
+ * the newest saved body with only its SETUP part replaced, written to the other bank. Patterns and sound stay as
+ * they were last saved. Nothing saved yet: a first save of everything */
+static int setup_save(void)
+{
+    st_hdr_t h0, h1;
+    int ok0 = st_bank_ok(ST_BANK0, &h0);
+    int ok1 = st_bank_ok(ST_BANK0 + ST_BANK_LEN, &h1);
+    if (!ok0 && !ok1) return fm313_app_store_save();     /* nothing saved yet: the first save, everything */
+    int use1 = ok1 && (!ok0 || (int32_t)(h1.seq - h0.seq) > 0);
+    uint32_t seq = use1 ? h1.seq : h0.seq, bank = use1 ? ST_BANK0 : ST_BANK0 + ST_BANK_LEN;
+    if (!st_bank_ok(use1 ? ST_BANK0 + ST_BANK_LEN : ST_BANK0, use1 ? &h1 : &h0)) return -1;   /* its body again */
+    const uint8_t *u = (const uint8_t *)&fm313.su;
+    uint8_t *d = st_buf + ST_PAT_BYTES + sizeof(fm313_sound_t);
+    for (uint32_t k = 0; k < sizeof(fm313_setup_t); k++) d[k] = u[k];
+    st_hdr_t h = { ST_MAGIC, seq + 1u, ST_BODY, crc32(st_buf, ST_BODY) };
+    for (uint32_t o = 0; o < ST_BANK_LEN; o += 0x1000u)
+        if (hw_flash_erase4k(bank + o)) return -1;
+    if (hw_flash_write(bank + sizeof h, st_buf, ST_BODY)) return -2;
+    if (hw_flash_write(bank, &h, sizeof h)) return -3;      /* the header last: commits the bank */
+    fm313.store_seq = seq + 1u;
+    return 0;
+}
+
 static void draw_boot(void);
 
 /* ---------------------------------------------------------------- init */
@@ -581,9 +605,11 @@ void fm313_app_audio(float *out_lr, int n)
          * with delay or reverb (L != R) both do. That fits headphones whose common return sits on the R output:
          * left ear = L - R, right ear = -R. Sending L' = l - r, R' = -r gives back left = l, right = r. With headphones
          * only (PB5): the speaker keeps the plain signal. */
+        /* 0.7.2: at half the level. Reported: much louder with the fix on (one ear before, two now, and l - r of a
+         * wide delay or reverb reaches twice the level of either side) */
         for (int i = 0; i < n; i++) {
             float l = out_lr[2*i], rr = out_lr[2*i + 1];
-            out_lr[2*i] = l - rr; out_lr[2*i + 1] = -rr;
+            out_lr[2*i] = 0.5f*(l - rr); out_lr[2*i + 1] = -0.5f*rr;
         }
     }
     fm313.play_step = fm313.q.playing ? fm313.q.step : -1;
@@ -2028,6 +2054,19 @@ void fm313_app_poll(void)
     {
         static int leds_set = -1;                      /* SETUP > LEDS, applied (at boot and when changed) */
         if (fm313.su.leds != leds_set) { leds_set = fm313.su.leds; hw_leds(leds_set); }
+    }
+    {                                                   /* SETUP left with a choice changed: kept (setup_save) */
+        static int was_setup;
+        static fm313_setup_t at_entry;
+        int in = fm313.mode == M_GLOBAL;
+        if (in && !was_setup) at_entry = fm313.su;
+        if (!in && was_setup) {
+            const uint8_t *a = (const uint8_t *)&at_entry, *b = (const uint8_t *)&fm313.su;
+            int diff = 0;
+            for (uint32_t k = 0; k < sizeof(fm313_setup_t); k++) diff |= a[k] != b[k];
+            if (diff && setup_save() == 0) message("SETUP KEPT", 0, 0);
+        }
+        was_setup = in;
     }
     {
         int hp = hw_phones();
