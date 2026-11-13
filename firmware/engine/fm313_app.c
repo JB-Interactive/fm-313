@@ -4,7 +4,7 @@
 #include "fm313_app.h"
 #include "fm313_gfx.h"
 #ifndef FM313_VERSION
-#define FM313_VERSION "0.7.3"
+#define FM313_VERSION "0.7.4"
 #endif
 
 /* ---------------------------------------------------------------- state */
@@ -605,11 +605,11 @@ void fm313_app_audio(float *out_lr, int n)
          * with delay or reverb (L != R) both do. That fits headphones whose common return sits on the R output:
          * left ear = L - R, right ear = -R. Sending L' = l - r, R' = -r gives back left = l, right = r. With headphones
          * only (PB5): the speaker keeps the plain signal. */
-        /* 0.7.2: at half the level. Reported: much louder with the fix on (one ear before, two now, and l - r of a
+        /* 0.7.2: at half the level; 0.7.4: at 0.7 (half was reported as far too quiet). Reported: much louder with the fix on (one ear before, two now, and l - r of a
          * wide delay or reverb reaches twice the level of either side) */
         for (int i = 0; i < n; i++) {
             float l = out_lr[2*i], rr = out_lr[2*i + 1];
-            out_lr[2*i] = 0.5f*(l - rr); out_lr[2*i + 1] = -0.5f*rr;
+            out_lr[2*i] = 0.7f*(l - rr); out_lr[2*i + 1] = -0.7f*rr;
         }
     }
     fm313.play_step = fm313.q.playing ? fm313.q.step : -1;
@@ -1562,13 +1562,12 @@ static void draw_scope(void)
         if (yt < SC_TOP + 1) yt = SC_TOP + 1;
         if (yb > sc_bot - 1) yb = sc_bot - 1;
         if (yt > yb) yt = yb;
-        int gt = yt - 1, gb = yb + 1;
+        int gt = yt, gb = yb;                         /* 0.7.4: a plain line, no glow */
         int ol = sc_lo[c], oh = sc_hi[c], x = SC_X0 + c;
         if (ol == gt && oh == gb) continue;
         for (int y = ol; y <= oh; y++)
             if (y < gt || y > gb) hw_fb_vspan(x, 24 + y, 24 + y, grid_at(x, y));
-        hw_fb_vspan(x, 24 + gt, 24 + gb, K_GLOW);
-        hw_fb_vspan(x, 24 + yt, 24 + yb, K_HOT);
+        hw_fb_vspan(x, 24 + yt, 24 + yb, K_GREEN);
         int t = ol >= 0 && ol < gt ? ol : gt, u = oh > gb ? oh : gb;
         if (t < top) top = t;
         if (u > bot) bot = u;
@@ -2151,7 +2150,7 @@ void fm313_app_poll(void)
     } else if (fm313.su.scope_mode == 2) {
         if (!fm313.scope_live) { panel_begin(0, 0, 1); hw_box_blit(0, 24); fm313.scope_live = 1; tip_drawn = 0; tip_update(now); }
         else if (!tip_update(now)) drew = 0;
-    } else if (now - scope_ms >= 40u) {
+    } else if (now - scope_ms >= 80u) {              /* 0.7.4: 12 frames a second (25 before) */
         scope_ms = now; drew_scope = 1;
         if (fm313.su.scope_mode == 1) draw_levels(); else draw_scope();
     }
