@@ -29,6 +29,10 @@ for f in sorted(pathlib.Path(sys.argv[1]).glob("scene*.txt")):
     assert 0.2 < pk <= 0.96 and 0.03 < rms < 0.4, (f.name, pk, rms)
 print("ok  render levels")
 PY
+# 3b. the engine under random use: finite, within full scale, no DC, silent after the last note
+$CC -std=c99 -O2 -w -o "$B/stress" tests/fm313/stress.c $E/fm313_dsp.c $E/fm313_fx.c -lm
+"$B/stress" 120
+echo "ok  engine stress"
 # 4. every screen drawn once (tools/screen.py renders the dumps)
 "$B/sim" tests/fm313/screens.txt "$B/scr"
 echo "ok  screens"

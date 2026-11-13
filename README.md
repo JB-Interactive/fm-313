@@ -2,7 +2,7 @@
 
 A minimal, 303-style bass line firmware for the M-VAVE FM-1: one monophonic acid voice, a step sequencer with 64 patterns, and the effects acid needs. Sound quality comes before feature count.
 
-**Status: 0.7.4, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
+**Status: 0.7.5, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
 
 FM-313 is an independent project. It is not made, endorsed or supported by Roland or M-VAVE. Installing it is at your own risk.
 
@@ -39,7 +39,7 @@ The platform (boot stub, update loader, USB, keys, display) comes from [TransitF
 | Slide | An RC glide with a fixed time; the envelopes are not retriggered |
 | Distortion | Overdrive, distortion, fuzz, crunch (a wavefolder), inside the oversampling so nothing aliases |
 | Rate | 88.2 kHz inside, a 47-tap half-band FIR down to 44.1 kHz |
-| Effects | Ping-pong delay (tempo-synced), FDN reverb, soft limiter |
+| Effects | Ping-pong delay (tempo-synced), FDN reverb. The output is clean up to 0.6 of full scale, with a soft knee above |
 
 Measured: aliasing at C6 with the filter open is below −73 dB. On a host computer the voice takes about 52 million instructions a second, about 71 million with delay and reverb. SETUP > UPDATE shows the load on the FM-1 itself. If it crackles, `-DFM313_OS=1` halves the load, without oversampling.
 
@@ -92,7 +92,7 @@ Three rules. The FM-1's labels mean what they say. A held button is a layer whos
 ```sh
 tools/get_toolchain.sh          # the JieLi Linux toolchain into ~/.jieli (pkgman.jieliapp.com)
 ./build.sh                      # -> build/fm313.fwsc
-sh tests/fm313/run.sh           # host tests: firmware syntax, app simulator, render levels, every screen
+sh tests/fm313/run.sh           # host tests: firmware syntax, app simulator, render levels, engine stress, every screen
 sh tests/run_tests.sh           # the platform's safety tests (loader, boot stub, update protocol)
 ```
 

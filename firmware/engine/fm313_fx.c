@@ -28,6 +28,17 @@ static inline int16_t wr16(float x)
     return (int16_t)x;
 }
 
+/* the output's ceiling (0.7.5): clean up to 0.6 of full scale, then a soft knee to 0.95. Before, a tanh over the
+ * whole range bent every signal: a clean sine at half scale came out with its third harmonic at -34 dB (2 %), and
+ * delay and reverb tails intermodulated with the dry sound. Now nothing is added below the knee */
+static inline float soft_knee(float x)
+{
+    float a = x < 0.f ? -x : x;
+    if (a <= 0.6f) return x;
+    a = 0.6f + 0.35f*fm313_tanh((a - 0.6f)*(1.f/0.35f));
+    return x < 0.f ? -a : a;
+}
+
 void fm313_fx_process(fm313_fx_t *f, const float *in, float *out, int n)
 {
     static const float divs[5] = { 0.25f, 1.f/3.f, 0.5f, 0.75f, 1.0f };
@@ -113,7 +124,7 @@ void fm313_fx_process(fm313_fx_t *f, const float *in, float *out, int n)
         if (f->lim_env < 1e-9f) f->lim_env = 0.f;
         float g = f->out_gain;
         if (f->lim_env > 0.9f) g *= 0.9f/f->lim_env;
-        out[2*i]   = fm313_tanh(l*g*1.05f)*0.95f;
-        out[2*i+1] = fm313_tanh(r*g*1.05f)*0.95f;
+        out[2*i]   = soft_knee(l*g);
+        out[2*i+1] = soft_knee(r*g);
     }
 }
