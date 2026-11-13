@@ -4,7 +4,7 @@
 #include "fm313_app.h"
 #include "fm313_gfx.h"
 #ifndef FM313_VERSION
-#define FM313_VERSION "0.7.5"
+#define FM313_VERSION "0.7.6"
 #endif
 
 /* ---------------------------------------------------------------- state */
@@ -224,24 +224,24 @@ static void parse_pattern(fm313_pattern_t *p, const char *t)
 typedef struct { const char *name; float cut, res, env, dec, acc; uint8_t wave, dtype; float drive, tone, dmix, dfb; uint8_t ddiv; float rmix, rtime; float gain; } preset_t;
 static const preset_t PRESETS[] = {
     { "CLASSIC",   0.35f, 0.72f, 0.55f, 0.45f, 0.70f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.20f },
-    { "SQUARE",    0.40f, 0.65f, 0.50f, 0.40f, 0.65f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.04f },
+    { "SQUARE",    0.40f, 0.65f, 0.50f, 0.40f, 0.65f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.07f },
     { "SQUELCH",   0.22f, 0.92f, 0.80f, 0.55f, 0.85f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.62f },
     { "DEEP",      0.15f, 0.40f, 0.30f, 0.70f, 0.40f, FM313_SAW,    FM313_DIST_OFF,  0.30f, 0.30f, 0.00f, 0.45f, 3, 0.10f, 0.40f, 1.51f },
-    { "RUBBER",    0.30f, 0.55f, 0.45f, 0.25f, 0.60f, FM313_SQUARE, FM313_DIST_OD,   0.35f, 0.40f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.56f },
+    { "RUBBER",    0.30f, 0.55f, 0.45f, 0.25f, 0.60f, FM313_SQUARE, FM313_DIST_OD,   0.35f, 0.40f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.57f },
     { "ACID DRIVE",0.32f, 0.85f, 0.65f, 0.50f, 0.80f, FM313_SAW,    FM313_DIST_OD,   0.60f, 0.55f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.61f },
     { "HARD DIST", 0.30f, 0.80f, 0.60f, 0.45f, 0.75f, FM313_SAW,    FM313_DIST_DIST, 0.75f, 0.60f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.68f },
-    { "FUZZ BASS", 0.25f, 0.60f, 0.50f, 0.50f, 0.60f, FM313_SQUARE, FM313_DIST_FUZZ, 0.65f, 0.45f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.65f },
+    { "FUZZ BASS", 0.25f, 0.60f, 0.50f, 0.50f, 0.60f, FM313_SQUARE, FM313_DIST_FUZZ, 0.65f, 0.45f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.64f },
     { "CRUNCH",    0.38f, 0.75f, 0.60f, 0.40f, 0.70f, FM313_SAW,    FM313_DIST_CRUNCH,0.55f,0.55f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.65f },
     { "DUB DELAY", 0.30f, 0.78f, 0.55f, 0.45f, 0.70f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.45f, 0.60f, 3, 0.10f, 0.50f, 0.96f },
-    { "PING PONG", 0.40f, 0.70f, 0.50f, 0.35f, 0.65f, FM313_SQUARE, FM313_DIST_OD,   0.30f, 0.50f, 0.35f, 0.50f, 1, 0.00f, 0.50f, 0.51f },
+    { "PING PONG", 0.40f, 0.70f, 0.50f, 0.35f, 0.65f, FM313_SQUARE, FM313_DIST_OD,   0.30f, 0.50f, 0.35f, 0.50f, 1, 0.00f, 0.50f, 0.52f },
     { "SPACE",     0.35f, 0.82f, 0.60f, 0.60f, 0.70f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.25f, 0.55f, 4, 0.40f, 0.80f, 0.69f },
     { "4-OSC LEAD",0.55f, 0.55f, 0.45f, 0.55f, 0.60f, FM313_SUPER,  FM313_DIST_OD,   0.35f, 0.60f, 0.25f, 0.40f, 3, 0.20f, 0.60f, 0.71f },
     { "SUPER BASS",0.25f, 0.45f, 0.40f, 0.50f, 0.55f, FM313_SUPER,  FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.05f, 0.40f, 2.04f },
     /* 0.7.1: eight more (gains by tools/preset_loudness.py, matched to the fourteen above) */
-    { "PLUCK",     0.28f, 0.50f, 0.70f, 0.12f, 0.60f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.20f },
+    { "PLUCK",     0.28f, 0.50f, 0.70f, 0.12f, 0.60f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.25f },
     { "LIQUID",    0.26f, 0.90f, 0.70f, 0.65f, 0.90f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.20f, 0.40f, 3, 0.15f, 0.50f, 0.62f },
-    { "HOLLOW",    0.50f, 0.30f, 0.20f, 0.60f, 0.50f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.12f, 0.45f, 1.16f },
-    { "SUB",       0.10f, 0.20f, 0.15f, 0.80f, 0.40f, FM313_SQUARE, FM313_DIST_OFF,  0.30f, 0.30f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.29f },
+    { "HOLLOW",    0.50f, 0.30f, 0.20f, 0.60f, 0.50f, FM313_SQUARE, FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.12f, 0.45f, 1.20f },
+    { "SUB",       0.10f, 0.20f, 0.15f, 0.80f, 0.40f, FM313_SQUARE, FM313_DIST_OFF,  0.30f, 0.30f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 1.33f },
     { "WOW",       0.18f, 0.88f, 0.90f, 0.75f, 0.95f, FM313_SAW,    FM313_DIST_OFF,  0.40f, 0.50f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.61f },
     { "ACID FUZZ", 0.30f, 0.85f, 0.70f, 0.50f, 0.80f, FM313_SAW,    FM313_DIST_FUZZ, 0.60f, 0.55f, 0.00f, 0.45f, 3, 0.00f, 0.50f, 0.68f },
     { "WAREHOUSE", 0.32f, 0.78f, 0.60f, 0.50f, 0.75f, FM313_SAW,    FM313_DIST_DIST, 0.60f, 0.50f, 0.00f, 0.45f, 3, 0.35f, 0.70f, 0.66f },

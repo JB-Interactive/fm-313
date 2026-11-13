@@ -42,6 +42,7 @@ typedef struct {
     float oct_now;               /* the cutoff in octaves, for the screen */
     int   cr_count;
     float sq_hp;                 /* droop on the square */
+    float duty;                  /* the square's duty at this pitch (control rate) */
     int   sliding;
     /* envelopes */
     float meg, veg, acc_cv;

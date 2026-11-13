@@ -135,6 +135,7 @@ void fm313_init(fm313_voice_t *v)
     v->seed = 0x2badf00du;
     v->pitch = v->pitch_target = 45.f;
     v->meg_tau = 0.1f;
+    v->duty = 0.55f;
     v->phase2[0] = 0.13f; v->phase2[1] = 0.57f; v->phase2[2] = 0.31f; v->phase2[3] = 0.83f;
     v->p.cutoff = 0.35f; v->p.reso = 0.6f; v->p.envmod = 0.5f;
     v->p.decay = 0.4f; v->p.accent = 0.6f; v->p.wave = FM313_SAW;
@@ -262,6 +263,12 @@ void fm313_render(fm313_voice_t *v, float *out, int n)
                 float sine = tri*(1.5f - 0.5f*tri*tri);                                     /* rounded */
                 float semis = v->pitch + p->tune + v->drift + p->vib*sine - 69.f;
                 v->dt = 440.f*fm313_exp2(semis*(1.f/12.f))/fs;
+                {   /* 0.7.6: the square's duty follows the pitch, as documented for the TB-303 (R. Whittle: about
+                     * 71 % at the lowest notes, about 45 % at high ones): 0.71 at C2 (65 Hz) down to 0.45 three
+                     * octaves up, by the octave. A fixed 47 % before: the low notes lacked their even harmonics */
+                    float du = 0.71f - 0.26f*(1.f/36.f)*(semis + 69.f - 36.f);
+                    v->duty = du > 0.71f ? 0.71f : (du < 0.45f ? 0.45f : du);
+                }
                 float oct = v->sm_base + v->sm_env*v->meg + 3.4f*v->acc_cv + v->sm_touch;
                 v->oct_now = oct;
                 float fc = fm313_exp2(oct);
@@ -292,7 +299,7 @@ void fm313_render(fm313_voice_t *v, float *out, int n)
                 /* capacitor ramp: slightly bowed saw */
                 float saw = 2.f*(ph + 0.17f*(ph - ph*ph)) - 1.f - polyblep(ph, dt);
                 if (p->wave == FM313_SQUARE) {
-                    const float duty = 0.47f;
+                    const float duty = v->duty;
                     float pt = ph + (1.f - duty); if (pt >= 1.f) pt -= 1.f;
                     float pulse = (ph < duty ? 1.f : -1.f) + polyblep(ph, dt) - polyblep(pt, dt);
                     float sq = 0.88f*pulse + 0.22f*saw;   /* shaped from the ramp: tilted tops */
