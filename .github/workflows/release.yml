@@ -2,7 +2,7 @@
 # A release for the FM-1 Firmware Hub (thefirmwarehub.com/kb/#sign): a tag vX.Y.Z builds FM-313 on GitHub's runner
 # with the hub's shared workflow, which signs the package (an attestation) and attaches it to the release.
 # The asset keeps one name (fm313.fwsc) and FM-313 one identity (FM-1_313), so the hub's Install takes the newest.
-#   git tag v0.7.6 && git push origin v0.7.6
+#   git tag v0.7.7 && git push origin v0.7.7
 name: release
 
 on:

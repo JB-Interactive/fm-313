@@ -2,7 +2,7 @@
 
 A minimal, 303-style bass line firmware for the M-VAVE FM-1: one monophonic acid voice, a step sequencer with 64 patterns, and the effects acid needs. Sound quality comes before feature count.
 
-**Status: 0.7.6, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
+**Status: 0.7.7, the first published version.** The engine, the sequencer and the controls pass their tests in the host simulator, the platform passes its safety tests, and the installer page passes its browser tests against a simulated FM-1. On hardware, FM-313 was developed on one FM-1 with Windows 11 and Edge.
 
 FM-313 is an independent project. It is not made, endorsed or supported by Roland or M-VAVE. Installing it is at your own risk.
 
@@ -32,12 +32,13 @@ The platform (boot stub, update loader, USB, keys, display) comes from [TransitF
 
 | Part | How |
 | --- | --- |
-| Oscillator | A capacitor ramp (a slightly bent sawtooth) with PolyBLEP. The square is shaped from the ramp, so its tops slope, and its duty follows the pitch (about 71 % at the lowest notes, 45 % at high ones). Also "4-OSC", four detuned sawtooths. A slow pitch drift of ±3 cents |
+| Oscillator | A capacitor ramp (a slightly bent sawtooth) with PolyBLEP. The square is shaped from the ramp, so its tops slope, and its duty sits a few percent off the half, more so at low notes (fitted to recordings of a TB-303). Also "4-OSC", four detuned sawtooths. A slow pitch drift of ±3 cents |
 | Filter | A 4-pole diode ladder as one coupled nonlinear system, solved implicitly (trapezoidal) per sample; tanh conductances for the diode pairs, a coupling capacitor in the resonance path (the bass stays at high resonance, the resonance is weaker at low cutoff), feedback just below self-oscillation |
 | Envelopes | Filter envelope with a decay of 0.2 to 2 s, fixed at the minimum on an accent. The amplifier envelope has a fast attack, a long decay and a 3.5 ms release |
 | Accent | An envelope through an RC stage whose time constant grows with the resonance, so accents in a row build up; they also raise the amplifier |
 | Slide | An RC glide with a fixed time; the envelopes are not retriggered |
 | Distortion | Overdrive, distortion, fuzz, crunch (a wavefolder), inside the oversampling so nothing aliases |
+| Output | Coupled through 18 Hz and 95 Hz high-passes: a low note's fundamental sits under its harmonics, as in recordings of a TB-303 |
 | Rate | 88.2 kHz inside, a 47-tap half-band FIR down to 44.1 kHz |
 | Effects | Ping-pong delay (tempo-synced), FDN reverb. The output is clean up to 0.6 of full scale, with a soft knee above |
 

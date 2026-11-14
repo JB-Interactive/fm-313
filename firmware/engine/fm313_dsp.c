@@ -30,13 +30,21 @@ static inline float fast_tan(float x)   /* Pade, fine up to ~1.3 rad */
     float x2 = x*x;
     return x*(15.f - x2)/(15.f - 6.f*x2);
 }
+/* 0.7.7: both by their series when the step is small. fm313_exp2's polynomial is 8.5e-5 short just under a whole
+ * exponent, which is exactly where a long time constant's coefficient sits (exp(-1/(tau fs)) = 1 - 2e-5 for 0.5 s):
+ * every decay behaved as if a 133 ms one ran beside it. The filter envelope reached 0.4 s at most, not 2 s; a held
+ * note faded in a tenth of the 3 to 4 s the TB-303 has; the slide and the accent sweep ran short too */
 static inline float onepole_coef(float hz, float fs)  /* 1-exp(-2pi f/fs) */
 {
-    return 1.f - fm313_exp2(-2.f*PI_F*hz/fs*1.44269504f);
+    float y = 2.f*PI_F*hz/fs;
+    if (y < 0.1f) return y*(1.f - y*(0.5f - y*(1.f/6.f)));
+    return 1.f - fm313_exp2(-y*1.44269504f);
 }
 static inline float tau_coef(float tau_s, float fs)    /* exp(-1/(tau fs)) */
 {
-    return fm313_exp2(-1.44269504f/(tau_s*fs));
+    float y = 1.f/(tau_s*fs);
+    if (y < 0.1f) return 1.f - y*(1.f - y*(0.5f - y*(1.f/6.f)));
+    return fm313_exp2(-1.44269504f*y);
 }
 static inline float polyblep(float t, float dt)
 {
@@ -222,7 +230,9 @@ void fm313_render(fm313_voice_t *v, float *out, int n)
     float vdec_c  = tau_coef(1.6f, fs);
     float acc_c   = tau_coef(0.004f + 0.075f*p->reso, fs);
     float fb_c    = onepole_coef(LAD_FB_HP, fs);
-    float hp1_c   = onepole_coef(18.f, fs), hp2_c = onepole_coef(45.f, fs);
+    /* the output coupling: 18 Hz and, 0.7.7, 95 Hz (45 before). In the recordings of a TB-303 the fundamental of a low
+     * note sits under its harmonics as behind one high-pass near 100 Hz (at 78 Hz 2.9 dB, at 157 Hz 0.9 dB) */
+    float hp1_c   = onepole_coef(18.f, fs), hp2_c = onepole_coef(95.f, fs);
     float sqhp_c  = onepole_coef(30.f, fs);
     float drift_c = onepole_coef(0.3f, fs/FM313_CR);
     /* knobs move in detents: everything a knob sets glides at the control rate (~6 ms), not once per audio
@@ -263,11 +273,12 @@ void fm313_render(fm313_voice_t *v, float *out, int n)
                 float sine = tri*(1.5f - 0.5f*tri*tri);                                     /* rounded */
                 float semis = v->pitch + p->tune + v->drift + p->vib*sine - 69.f;
                 v->dt = 440.f*fm313_exp2(semis*(1.f/12.f))/fs;
-                {   /* 0.7.6: the square's duty follows the pitch, as documented for the TB-303 (R. Whittle: about
-                     * 71 % at the lowest notes, about 45 % at high ones): 0.71 at C2 (65 Hz) down to 0.45 three
-                     * octaves up, by the octave. A fixed 47 % before: the low notes lacked their even harmonics */
-                    float du = 0.71f - 0.26f*(1.f/36.f)*(semis + 69.f - 36.f);
-                    v->duty = du > 0.71f ? 0.71f : (du < 0.45f ? 0.45f : du);
+                {   /* 0.7.7: the square's duty, fitted to recordings of a TB-303 (the even harmonics of its
+                     * square sit about 19 dB under the fundamental at 88 Hz and fall towards higher notes: a duty
+                     * a few percent off the half, by 2.6/f). 0.7.6 had taken 71 % at the lowest notes from the
+                     * literature: against the recordings its second harmonic was 14 dB too loud */
+                    float e = 2.6f/(v->dt*fs);
+                    v->duty = 0.5f - (e > 0.12f ? 0.12f : e);
                 }
                 float oct = v->sm_base + v->sm_env*v->meg + 3.4f*v->acc_cv + v->sm_touch;
                 v->oct_now = oct;
